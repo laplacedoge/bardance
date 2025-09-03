@@ -1,6 +1,7 @@
 use std::{path::PathBuf, str::FromStr};
 
 use clap::{Parser, ValueEnum};
+use lazy_regex::regex;
 
 static DEFAULT_BAR_WIDTH: f64 = 16.0;
 static DEFAULT_BAR_SPACING: f64 = 8.0;
@@ -88,8 +89,26 @@ struct Color {
 impl FromStr for Color {
     type Err = String;
 
-    fn from_str(_: &str) -> Result<Self, Self::Err> {
-        Ok(Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 })
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let regex = regex!(r"^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$");
+        if let Some(c) = regex.captures(s) {
+            let r = c[1].parse::<u8>()
+                .map_err(|_| "Invalid red component")?
+                as f64 / 255.0;
+            let g = c[2].parse::<u8>()
+                .map_err(|_| "Invalid green component")?
+                as f64 / 255.0;
+            let b = c[3].parse::<u8>()
+                .map_err(|_| "Invalid blue component")?
+                as f64 / 255.0;
+            let a = c[4].parse::<u8>()
+                .map_err(|_| "Invalid alpha component")?
+                as f64 / 255.0;
+
+            Ok(Color { r, g, b, a })
+        } else {
+            Err("Invalid color format".into())
+        }
     }
 }
 

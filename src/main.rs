@@ -3,6 +3,8 @@ use std::{path::PathBuf, str::FromStr};
 use clap::{Parser, ValueEnum};
 use lazy_regex::regex;
 
+mod decoder;
+
 static DEFAULT_BAR_WIDTH: f64 = 16.0;
 static DEFAULT_BAR_SPACING: f64 = 8.0;
 static DEFAULT_BAR_HEIGHT_MIN: f64 = 16.0;
@@ -122,6 +124,16 @@ impl ToString for Color {
     }
 }
 
+fn process_audio(cli: &Cli) -> Result<(), String> {
+    let samples = decoder::decode_audio(&cli.audio_file)
+        .map_err(|e| format!("Failed to process audio: {e}"))?;
+
+    Ok(())
+}
+
 fn main() {
-    let _ = Cli::parse();
+    let cli = Cli::parse();
+    if let Err(e) = process_audio(&cli) {
+        println!("{e}");
+    }
 }
